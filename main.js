@@ -58,6 +58,10 @@ class TOCModal extends SuggestModal {
 		const self = this;
 		const originalSetSelectedItem = this.chooser.setSelectedItem;
 		this.chooser.setSelectedItem = function(index, evt) {
+			// Stop if the index is negative (above the top) or out of range (below the bottom)
+			if (index < 0 || index >= self.getSuggestions(self.inputEl.value).length) {
+				return;
+			}
 			originalSetSelectedItem.apply(this, [index, evt]);
 			const suggestions = self.getSuggestions(self.inputEl.value);
 			if (suggestions[index]) {
