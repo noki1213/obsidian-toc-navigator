@@ -62,7 +62,7 @@ class TOCModal extends SuggestModal {
 		// Mark it if it's the current position
 		if (item.isCurrent) {
 			container.addClass("is-current-heading");
-			container.createSpan({ text: " 〉", cls: "current-marker" });
+			container.createSpan({ text: " ●", cls: "current-marker" });
 		}
 	}
 
