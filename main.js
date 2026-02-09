@@ -57,7 +57,11 @@ class TOCModal extends SuggestModal {
 		// Create indentation that matches the heading's level
 		container.style.paddingLeft = `${(item.level - 1) * 20}px`;
 		
-		const textEl = container.createSpan({ text: item.heading });
+		// Display the heading level (H1, H2, ...)
+		container.createSpan({ text: `H${item.level} `, cls: "toc-level-prefix" });
+		
+		// Display the heading's text
+		container.createSpan({ text: item.heading });
 		
 		// Mark it if it's the current position
 		if (item.isCurrent) {
