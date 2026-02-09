@@ -22,11 +22,17 @@ class TOCModal extends SuggestModal {
 		super(app);
 		this.view = view;
 		this.setPlaceholder("見出しを検索・選択してください");
+		
+		// Create the area for displaying the breadcrumb list
+		this.breadcrumbEl = createDiv({ cls: "toc-breadcrumb" });
 	}
 
 	// Logic run when the modal opens
 	onOpen() {
 		super.onOpen();
+		
+		// Insert the breadcrumb list at the top of the modal (below the search box)
+		this.inputEl.parentElement.appendChild(this.breadcrumbEl);
 		
 		// Wait a moment for the screen to finish rendering, then focus the current position
 		requestAnimationFrame(() => {
@@ -35,8 +41,48 @@ class TOCModal extends SuggestModal {
 			
 			if (currentIndex !== -1 && this.chooser) {
 				this.chooser.setSelectedItem(currentIndex);
+				this.updateBreadcrumb(suggestions[currentIndex]);
 			}
 		});
+
+		// Mechanism that updates the breadcrumb list when the selection changes
+		const self = this;
+		const originalSetSelectedItem = this.chooser.setSelectedItem;
+		this.chooser.setSelectedItem = function(index, evt) {
+			originalSetSelectedItem.apply(this, [index, evt]);
+			const suggestions = self.getSuggestions(self.inputEl.value);
+			if (suggestions[index]) {
+				self.updateBreadcrumb(suggestions[index]);
+			}
+		};
+	}
+
+	// Update the breadcrumb list
+	updateBreadcrumb(selectedItem) {
+		const cache = this.app.metadataCache.getFileCache(this.view.file);
+		if (!cache || !cache.headings) return;
+
+		const allHeadings = cache.headings;
+		const breadcrumbs = [];
+		
+		// Trace the parent hierarchy of the selected heading
+		let currentLevel = selectedItem.level;
+		const selectedIndex = allHeadings.findIndex(h => h.position.start.offset === selectedItem.position.start.offset);
+		
+		for (let i = selectedIndex; i >= 0; i--) {
+			if (allHeadings[i].level < currentLevel) {
+				breadcrumbs.unshift(allHeadings[i].heading);
+				currentLevel = allHeadings[i].level;
+			}
+			if (currentLevel === 1) break;
+		}
+
+		if (breadcrumbs.length > 0) {
+			this.breadcrumbEl.setText(breadcrumbs.join(" 〉 "));
+			this.breadcrumbEl.style.display = "block";
+		} else {
+			this.breadcrumbEl.style.display = "none";
+		}
 	}
 
 	// Build the list to display (the heading list)
