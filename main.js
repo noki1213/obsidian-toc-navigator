@@ -31,8 +31,11 @@ class TOCModal extends SuggestModal {
 	onOpen() {
 		super.onOpen();
 		
-		// Insert the breadcrumb list at the top of the modal (below the search box)
-		this.inputEl.parentElement.appendChild(this.breadcrumbEl);
+		// Find the container holding the search box and insert the breadcrumb list right after it
+		const inputContainer = this.inputEl.parentElement;
+		if (inputContainer) {
+			inputContainer.insertAdjacentElement('afterend', this.breadcrumbEl);
+		}
 		
 		// Wait a moment for the screen to finish rendering, then focus the current position
 		requestAnimationFrame(() => {
@@ -78,7 +81,7 @@ class TOCModal extends SuggestModal {
 		}
 
 		if (breadcrumbs.length > 0) {
-			this.breadcrumbEl.setText(breadcrumbs.join(" 〉 "));
+			this.breadcrumbEl.setText(breadcrumbs.join(" 〉 ") + " 〉");
 			this.breadcrumbEl.style.display = "block";
 		} else {
 			this.breadcrumbEl.style.display = "none";
