@@ -24,6 +24,21 @@ class TOCModal extends SuggestModal {
 		this.setPlaceholder("見出しを検索・選択してください");
 	}
 
+	// Logic run when the modal opens
+	onOpen() {
+		super.onOpen();
+		
+		// Wait a moment for the screen to finish rendering, then focus the current position
+		requestAnimationFrame(() => {
+			const suggestions = this.getSuggestions("");
+			const currentIndex = suggestions.findIndex(s => s.isCurrent);
+			
+			if (currentIndex !== -1 && this.chooser) {
+				this.chooser.setSelectedItem(currentIndex);
+			}
+		});
+	}
+
 	// Build the list to display (the heading list)
 	getSuggestions(query) {
 		const cache = this.app.metadataCache.getFileCache(this.view.file);
