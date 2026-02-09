@@ -90,12 +90,9 @@ class TOCModal extends SuggestModal {
 			if (currentLevel === 1) break;
 		}
 
-		if (breadcrumbs.length > 0) {
-			this.breadcrumbEl.setText(breadcrumbs.join(" 〉 ") + " 〉");
-			this.breadcrumbEl.style.display = "block";
-		} else {
-			this.breadcrumbEl.style.display = "none";
-		}
+		// Even for an H1 (where breadcrumbs is empty), keep the area visible and just show " 〉"
+		this.breadcrumbEl.setText(breadcrumbs.join(" 〉 ") + (breadcrumbs.length > 0 ? " 〉" : " 〉"));
+		this.breadcrumbEl.style.display = "block";
 	}
 
 	// Build the list to display (the heading list)

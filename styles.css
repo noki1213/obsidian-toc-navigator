@@ -29,6 +29,7 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	z-index: 10;
+	min-height: 31px; /* Fix the height to prevent jitter */
 }
 
 /* Setting to size the modal's height to fit its content */
