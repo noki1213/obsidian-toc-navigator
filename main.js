@@ -30,6 +30,12 @@ class TOCModal extends SuggestModal {
 	// Logic run when the modal opens
 	onOpen() {
 		super.onOpen();
+
+		// Add a dedicated class to the modal itself so its height can be adjusted via CSS
+		const modalEl = this.contentEl.closest('.modal');
+		if (modalEl) {
+			modalEl.addClass("toc-navigator-modal");
+		}
 		
 		// Find the container holding the search box and insert the breadcrumb list right after it
 		const inputContainer = this.inputEl.parentElement;
