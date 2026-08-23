@@ -2,7 +2,7 @@ const { Plugin, SuggestModal, MarkdownView } = require('obsidian');
 
 module.exports = class TOCNavigator extends Plugin {
 	async onload() {
-		// Add a command (a feature that can be bound to a shortcut key)
+		// Add the command, which the user can bind to a hotkey
 		this.addCommand({
 			id: 'open-toc-navigator',
 			name: 'Open TOC Navigator',
@@ -16,34 +16,34 @@ module.exports = class TOCNavigator extends Plugin {
 	}
 };
 
-// Configuration for the screen (modal) that displays the table of contents
+// The modal that shows the table of contents
 class TOCModal extends SuggestModal {
 	constructor(app, view) {
 		super(app);
 		this.view = view;
 		this.setPlaceholder("見出しを検索・選択してください");
 		
-		// Create the area for displaying the breadcrumb list
+		// Create the area that holds the breadcrumbs
 		this.breadcrumbEl = createDiv({ cls: "toc-breadcrumb" });
 	}
 
-	// Logic run when the modal opens
+	// Runs when the modal opens
 	onOpen() {
 		super.onOpen();
 
-		// Add a dedicated class to the modal itself so its height can be adjusted via CSS
+		// Tag the modal with its own class so CSS can control the height
 		const modalEl = this.contentEl.closest('.modal');
 		if (modalEl) {
 			modalEl.addClass("toc-navigator-modal");
 		}
 		
-		// Find the container holding the search box and insert the breadcrumb list right after it
+		// Find the container holding the search box and insert the breadcrumbs right after it
 		const inputContainer = this.inputEl.parentElement;
 		if (inputContainer) {
 			inputContainer.insertAdjacentElement('afterend', this.breadcrumbEl);
 		}
 		
-		// Wait a moment for the screen to finish rendering, then focus the current position
+		// Wait a tick for the view to lay out, then focus the current heading
 		requestAnimationFrame(() => {
 			const suggestions = this.getSuggestions("");
 			const currentIndex = suggestions.findIndex(s => s.isCurrent);
@@ -54,11 +54,11 @@ class TOCModal extends SuggestModal {
 			}
 		});
 
-		// Mechanism that updates the breadcrumb list when the selection changes
+		// Keep the breadcrumbs in sync with the selection
 		const self = this;
 		const originalSetSelectedItem = this.chooser.setSelectedItem;
 		this.chooser.setSelectedItem = function(index, evt) {
-			// Stop if the index is negative (above the top) or out of range (below the bottom)
+			// Bail out if the index runs off either end of the list
 			if (index < 0 || index >= self.getSuggestions(self.inputEl.value).length) {
 				return;
 			}
@@ -70,7 +70,7 @@ class TOCModal extends SuggestModal {
 		};
 	}
 
-	// Update the breadcrumb list
+	// Redraw the breadcrumbs
 	updateBreadcrumb(selectedItem) {
 		const cache = this.app.metadataCache.getFileCache(this.view.file);
 		if (!cache || !cache.headings) return;
@@ -78,7 +78,7 @@ class TOCModal extends SuggestModal {
 		const allHeadings = cache.headings;
 		const breadcrumbs = [];
 		
-		// Trace the parent hierarchy of the selected heading
+		// Walk up the parents of the selected heading
 		let currentLevel = selectedItem.level;
 		const selectedIndex = allHeadings.findIndex(h => h.position.start.offset === selectedItem.position.start.offset);
 		
@@ -90,12 +90,12 @@ class TOCModal extends SuggestModal {
 			if (currentLevel === 1) break;
 		}
 
-		// Even for an H1 (where breadcrumbs is empty), keep the area visible and just show " 〉"
+		// For an H1 the trail is empty, so keep the area visible and show only the separator
 		this.breadcrumbEl.setText(breadcrumbs.join(" 〉 ") + (breadcrumbs.length > 0 ? " 〉" : " 〉"));
 		this.breadcrumbEl.style.display = "block";
 	}
 
-	// Build the list to display (the heading list)
+	// Build the list of headings to show
 	getSuggestions(query) {
 		const cache = this.app.metadataCache.getFileCache(this.view.file);
 		if (!cache || !cache.headings) return [];
@@ -103,7 +103,7 @@ class TOCModal extends SuggestModal {
 		const headings = cache.headings;
 		const cursorLine = this.view.editor.getCursor().line;
 
-		// Identify the single heading immediately before the cursor position
+		// Pick the single heading that sits just before the cursor
 		let currentHeadingIndex = -1;
 		for (let i = 0; i < headings.length; i++) {
 			if (headings[i].position.start.line <= cursorLine) {
@@ -121,26 +121,26 @@ class TOCModal extends SuggestModal {
 		}).filter(h => h.heading.toLowerCase().includes(query.toLowerCase()));
 	}
 
-	// Build the list's appearance
+	// Render one row of the list
 	renderSuggestion(item, el) {
 		const container = el.createDiv({ cls: "toc-nav-item" });
 		
-		// Create indentation that matches the heading's level
+		// Indent according to the heading level
 		container.style.paddingLeft = `${(item.level - 1) * 20}px`;
 		
-		// Display the heading level (H1, H2, ...)
+		// Show the heading level (H1, H2, ...)
 		container.createSpan({ text: `H${item.level} `, cls: "toc-level-prefix" });
 		
-		// Display the heading's text
+		// Show the heading text
 		container.createSpan({ text: item.heading });
 		
-		// Mark it if it's the current position
+		// Mark the row the cursor is currently in
 		if (item.isCurrent) {
 			container.addClass("is-current-heading");
 		}
 	}
 
-	// Action on selection (jump to that location)
+	// Jump to the heading that was chosen
 	onChooseSuggestion(item, evt) {
 		this.view.editor.setCursor(item.position.start.line, 0);
 		this.view.editor.scrollIntoView({
